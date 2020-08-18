@@ -1,0 +1,168 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.special
+import seaborn as sns
+
+
+e     = 2.718
+D     = 0.2             
+h     = 3370            
+M     = 47              
+d     = 0.0698          
+Q     = 47              
+ros   = 1200            
+mi    = 0.5             
+C     = 320             
+rop   = 2600            
+R     = 300             
+q     = 0.02            
+rosk  = 2700            
+qt    = 193             
+E     = 9000000000      
+v     = 0.2             
+kc    = 0.00000000000001
+C1    = 0.0001          
+r     = 0.1             
+hf    = 7               
+cosfi = -1              
+g     = 9.80665   
+    
+def oblicz():   
+    
+    global Pnet
+    
+    K = 0.5 * ((1 + (2 * v) / (1 -v)) + (1 - (2 *v) / (1 -v)) * cosfi)
+    print("współczynnik Crittendona=", K)
+
+    Pg = (h * rosk * g) / 1000000
+    print("Ciśnienie Górotworu=",Pg)
+
+    Ps = Pg * K
+    print("Ciśnienie Szczelinowania=",Ps)
+
+    rosp = ros * (1 - C / rop) + C
+    print("Ciśnienie hydrostatyczne cieczy szczelinującej=",rosp)
+    
+    PH = (rosp * h * g) / 1000000
+    print("Ciśnienie hydrostatyczne=" ,PH)
+
+    A = (0.035 ** (2)) * 3.1415
+    print("Powierzchnia=" ,A)
+
+    V = q / A
+    print("Prędkość tłoczenia=" ,V)
+
+    Re=(rosp*V*d)/mi
+    print("Re=", Re)
+    
+    lamb  = 64/Re
+    print("Lambda=" ,lamb)
+    
+    PTR = (lamb * (((h - 0.5 * M) / d)) * ((V ** 2) / 2) * rosp) / 1000000
+    print("Straty na tarcie=",PTR)
+
+    PT = Ps + PTR - PH
+    print( "Ciśnienie tłoczenia=" ,PT)
+
+    F = Ps * (3.1415 / 4) * (D ** 2 - d ** 2)
+    print( "Fiła działająca na paker=" ,F)
+
+    Ft = (h * qt) / 1000
+    print( "Ciężar przewodu tłoczącego=" ,Ft)
+
+    Vp = ((3.1415 * (d ** 2)) / 4) * ((h - M)) + (((3.1415 * (D ** 2)) / 4) * M)
+    print("objętośc przybitki=" ,Vp)
+
+    t = Q / q
+    print( "czas tłcozenia=",t)
+    global Eprim
+    Eprim = E / (1 - v ** 2) / 1000000
+    print("E'=", Eprim)
+    global Qi
+    Qi = q / 2
+    print( "Qi=" ,Qi)
+
+    Lprim = (q * (t) ** (1 / 2)) / (2 * 3.1415 * hf * C1)
+    print("L'=",Lprim)
+
+    Pnet = (((16 * mi * Qi * Eprim ** 3) / (3.14158 * hf ** 4)) * Lprim) ** (1 / 4)
+    print("Ciśnienie netto=" ,Pnet)
+
+    w = (2 * Pnet * hf * (1 - v ** 2)) / (E / 1000000)
+    print("maksymalna szerokość szczeliny=" ,w)
+
+    wsr = (3.1415 / 4) * w
+    print( "średnia szerokość szczeliny=" , wsr)
+
+    Sp = (2 * C1 * ((3.1415 * t) ** (1 / 2))) / wsr
+
+    Sp2 = Sp ** 2
+
+    Af = ((Qi * wsr) / (4 * 3.1415 * (C1 ** 2))) * (
+    ((e ** (Sp2)) * scipy.special.erfc(Sp)) + ((2 / (3.1415 ** (1 / 2))) * Sp) - 1)
+    print("powierzchnia szczeliny=",Af)
+
+    L = Af / (2 * hf)
+    print("promień zaisęgu szczeliny=",L)
+
+    dL = abs(L - Lprim)
+    print( "Błąd|L-L'|=",dL)
+
+    err = L
+
+    iter = 0
+    while err > 1:
+        print( "iteracja" ,iter)
+        
+        Pnet = (((16 * mi * Qi * Eprim ** 3) / (3.14158 * hf ** 4)) * L) ** (1 / 4)
+        print( "Pnet=", Pnet)
+        w = (2 * Pnet * hf * (1 - v ** 2)) / (E / 1000000)
+        print( "Mksymalna szerokość szczeliny=" ,w)
+        wsr = (3.1415 / 4) * w
+        print( "średnia szerokosc szczeliny",wsr)
+        Sp = (2 * C1 * ((3.1415 * t) ** (1 / 2))) / wsr
+
+        Sp2 = Sp ** 2
+
+        Af = ((Qi * wsr) / (4 * 3.1415 * (C1 ** 2))) * (
+            ((np.e ** (Sp2)) * scipy.special.erfc(Sp)) + ((2 / (3.1415 ** (1 / 2))) * Sp) - 1)
+        print( "Powierzchnia szczeliny=",Af)
+        
+        Lnew = Af / (2 * hf)
+        print("nowe L=" ,Lnew)
+
+        err = abs(Lnew - L)
+        print( "Błąd=",err)
+        L = Lnew
+        iter = iter + 1
+    print("########################################################################")
+    return L
+          
+L=oblicz()
+
+
+
+def plot_szerokość():
+    global x1, y1
+    x1=np.array(np.arange(0,L,0.1))
+    y1=3*(((mi*Qi*(L-x1))/Eprim))**(0.25) 
+    sns.set(rc={'figure.figsize':(10,2)})
+    plt.plot(x1,y1,'b-')
+    plt.plot(x1,-y1,'b-')
+    plt.plot(-x1,y1,'b-')
+    plt.plot(-x1,-y1,'b-')
+    plt.savefig('szerokość.jpg')
+plot_szerokość()
+
+
+def plot_wysokosc():
+    global x2, y2
+    x2=np.array(np.arange(-hf/2,0,0.1))
+    y2=((2*hf*Pnet)/(Eprim))*((1-(x2**2)/(hf/2)**2))**0.5
+    sns.set(rc={'figure.figsize':(2,10)})
+    plt.plot(y2,x2,'b-')
+    plt.plot(y2,-x2,'b-')
+    plt.plot(-y2,x2,'b-')
+    plt.plot(-y2,-x2,'b-')
+    plt.savefig('wysokość.jpg')
+plot_wysokosc()
