@@ -1,0 +1,111 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# zadanie obliczyć grubosci scianek segmentów zbiornika ropy naftowej.
+# dane projektowe:
+
+D = 85
+H = 19.2
+h = 2.4
+sigm = 208
+n = [1, 2, 3, 4, 5, 6, 7, 8]  # liczba segmentów
+t = []  # tablica na wyniki grubosci scianek
+
+
+# obliczenie grubosci sciany 1 sementu:
+
+def oblicz_pierwszy_segment(D, H, sigm):
+    t1 = (1.06 - ((0.0696 * D) / H) * np.sqrt(H / sigm)) * ((4.9 * D * H) / sigm)
+    return t1
+
+# obliczenie wartosci ilorazu tylko dla 2 segmentu
+
+def licz_ilo(D, h, i):
+    ilo = h * 1000 / (np.sqrt((D * 1000 / 2) * t[i]))
+    return ilo
+
+# definicja funkcji potrzebnych do wykoanania zadania
+
+def licz_tu(i, D, H, h, sigm):
+    tu = (4.9 * D * ((H - n[i] * h) - 0.3)) / sigm
+    return tu
+
+# inicjalizacja zmiennej tL(jako t poprzednie )
+
+def licz_k(tL,tu):
+    K=tL/tu
+    return K
+
+def licz_c(K):
+    C = (np.sqrt(K) * (K - 1)) / (1 + (K ** 1.5))
+    return C
+
+def licz_x_min(i, C, tu, D, H, h):
+    global X
+    X = []
+    x1 = 0.61 * np.sqrt(D * 1000 / 2 * tu) + 320 * C * (H - n[i] * h)
+    X.append(x1)
+
+    x2 = 1000 * C * (H - n[i] * h)
+    X.append(x2)
+
+    x3 = 1.22 * np.sqrt((D * 1000 / 2) * tu)
+    X.append(x3)
+
+   
+    print(X)
+    X = min(X)
+
+    return X
+
+def licz_tn(i,X):
+    tn=(4.9*D*((H-n[i]*h)-(X/1000)))/sigm
+    return tn
+
+#obliczam pierwszy segment 
+t1=oblicz_pierwszy_segment(D, H, sigm)
+t.append(t1)
+print("obliczone wartości t=",t)
+print("*"*50)
+
+#licze iloraz
+ilo=licz_ilo(D, h, 0)
+print("Iloraz=",ilo)
+
+#licze tu
+tu=licz_tu(0, D, H, h, sigm)
+print("tu=",tu)
+
+tL=t[0]
+K=licz_k(tL,tu)
+print('K=',K)
+
+C=licz_c(K)
+print('C=',C)
+
+X=licz_x_min(0, C, tu, D, H, h)
+print("X min=",X)
+
+tn=licz_tn(0,X)
+print("tn=",tn)
+
+tnprim=tu                          #zamieniam tu na tnprim które będe odejmował od tn czyli (tn-tu)
+err=np.abs(tn-tnprim)                                     # w pierwszym przypadku 
+print("błąd:",err)            # error wychodzi 1,42 czyli o wiele > 0.005 a taki sobie założyliśmy 
+print('='*50)                                            
+
+while err>=0.005:                   # tworze petle while która będzie powtarzać obliczenie err dla kolejnych warotści dopóki nie
+    tuprim=tn                       #  osiągnie err <0.005 
+    tL=t[0]
+    K=licz_k(tL,tuprim)     
+    print('K=',K)
+    C=licz_c(K)
+    print('C=',C)
+    X=licz_x_min(0,C,tuprim,D,H,h)
+    print('X=',X)
+    tn=licz_tn(0,X)                 # nowo obliczane tn dla kolejnych wartości 
+    print('tn=',tn)
+    err=np.abs(tn-tuprim)           # odejmowanie od tn=tuprim czyli starego tn z poprzedeniej pętli, nowego obliczonego dla tej pętli
+    print('błąd',err)
+    print('='*20)
