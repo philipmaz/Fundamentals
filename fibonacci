@@ -1,0 +1,14 @@
+user_response=int(input('How many numbers?: '))
+i=0
+j=1
+k=0
+fib=0
+
+print("1.", i)
+print("2.",j)
+
+for i in range(2,user_response):
+    fib=j+k
+    j=k
+    k=fib
+    print("%d.%d" %(i,fib))
