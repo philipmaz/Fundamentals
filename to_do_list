@@ -1,0 +1,32 @@
+list=[]
+n=0
+while n<100:
+
+    command=input("Please specify command [list, add, mark, archive]:")
+
+    if command=='add':
+        add = input('Add an item:')
+        list.append(add)
+        print("Item added.")
+
+
+    if command=='list':
+        print("You saved the following items:")
+        for idx,item in enumerate(list):
+            print('%d . [ ] %s' % (idx + 1, item))
+
+    if command =='mark':
+        print("You saved the following items:")
+        for idx,item in enumerate(list):
+            print('%d . [ ] %s' % (idx + 1, item))
+        mark=int(input("Which one would you like to mark as completed:"))
+        mark=mark-1
+        print(list[mark],'is completed')
+
+        for idx, item in enumerate(list):
+            if idx == mark:
+                print('%d . [x] %s  ' %(idx+1,item))
+            else:
+                print('%d . [ ] %s' %(idx+1,item))
+
+        list.remove(list[mark])
